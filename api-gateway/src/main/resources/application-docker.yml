@@ -1,0 +1,18 @@
+spring:
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri: http://keycloak:8181/realms/spring-boot-microservices-realm
+
+eureka:
+  client:
+    service-url:
+      default-zone: http://eureka:password@discovery-server:8761/eureka
+server:
+  port: 8080
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

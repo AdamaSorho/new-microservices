@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: api-gateway
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri: http://localhost:8181/realms/spring-boot-microservices-realm
+  cloud:
+    gateway:
+      routes:
+        ## product service route
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/v1/product
+        ## order service route
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/order
+        ## discovery server route
+        - id: discovery-server
+          uri: http://localhost:8761
+          predicates:
+            - Path=/eureka/web
+          filters:
+            - SetPath=/
+        ## discovery server static route
+        - id: discovery-server-static
+          uri: http://localhost:8761
+          predicates:
+            - Path=/eureka/**
+  ## distributed tracing
+#  zipkin:
+#    base-url: http://localhost:9411
+#    sleuth:
+#      sampler:
+#        probability: 1.0
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+eureka:
+  client:
+    service-url:
+      default-zone: http://eureka:password@localhost:8761/eureka
+server:
+  port: 8080
+logging:
+  pattern:
+    level: "%5p [${spring.zipkin.service.name:${spring.application.name:}},%X{traceId:-},%X{spanId:-}]"
+  level:
+    root: INFO
+    springframework: ERROR
+    org:
+      springframework:
+        cloud:
+          gateway.route:
+            RouteDefinitionLocator: INFO
+          gateway: TRACE

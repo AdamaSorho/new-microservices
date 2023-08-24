@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: inventory-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/inventory_service_db
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.HSQLDialect
+
+  ## for distributed tracing
+#  zipkin:
+#    base-url: http://localhost:9411
+#    sleuth:
+#      sampler:
+#        probability: 1.0
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+eureka:
+  client:
+    service-url:
+      default-zone: http://eureka:password@localhost:8761/eureka
+server:
+  port: 8082
+logging:
+  pattern:
+    level: "%5p [${spring.zipkin.service.name:${spring.application.name:}},%X{traceId:-},%X{spanId:-}]"
+  level:
+    root: INFO
+    springframework: ERROR
+

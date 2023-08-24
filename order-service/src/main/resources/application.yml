@@ -1,0 +1,95 @@
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/order_service_db
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.HSQLDialect
+  ## kafka's properties
+  kafka:
+    bootstrap-servers: localhost:63892
+    template:
+      default-topic: notificationTopic
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: event:com.adamasorho.orderservice.event.OrderPlacedEvent
+eureka:
+  client:
+    service-url:
+      default-zone: http://eureka:password@localhost:8761/eureka
+server:
+  port: 8081
+
+## actuator's properties and distributed tracing
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  health:
+    circuitbreakers:
+    enabled: true
+  endpoints:
+    web:
+      exposure:
+        ## dangerous for production usage
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+## resilience4j's properties
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventory:
+        registerHealthIndicator: true
+        event-consumer-buffer-size: 10
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+  ## timeout properties
+  timelimiter:
+    instances:
+      inventory:
+        timeout-duration: 3s
+  ## retry properties
+  retry:
+    instances:
+      inventory:
+        max-attempts: 3
+        wait-duration: 5s
+rest:
+  port: 59097
+
+  ## for distributed tracing
+#  zipkin:
+#    base-url: http://localhost:9411
+#    sleuth:
+#      sampler:
+#        probability: 1.0
+
+inventory-service:
+  name: inventory-service
+  protocol: http
+logging:
+  pattern:
+    level: "%5p [${spring.zipkin.service.name:${spring.application.name:}},%X{traceId:-},%X{spanId:-}]"
+  level:
+    root: INFO
+    springframework: ERROR
