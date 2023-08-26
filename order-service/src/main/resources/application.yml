@@ -10,9 +10,9 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
-#    properties:
-#      hibernate:
-#        dialect: org.hibernate.dialect.HSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   ## kafka's properties
   kafka:
     bootstrap-servers: localhost:63892

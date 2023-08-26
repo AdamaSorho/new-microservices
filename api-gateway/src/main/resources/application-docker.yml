@@ -3,7 +3,32 @@ spring:
     oauth2:
       resource-server:
         jwt:
-          issuer-uri: http://keycloak:8181/realms/spring-boot-microservices-realm
+          issuer-uri: http://keycloak:8080/realms/spring-boot-microservices-realm
+  cloud:
+    gateway:
+      routes:
+        ## product service route
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/v1/product
+        ## order service route
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/order
+        ## discovery server route
+        - id: discovery-server
+          uri: http://discovery-server:8761
+          predicates:
+            - Path=/eureka/web
+          filters:
+            - SetPath=/
+        ## discovery server static route
+        - id: discovery-server-static
+          uri: http://discovery-server:8761
+          predicates:
+            - Path=/eureka/**
 
 eureka:
   client:

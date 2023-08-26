@@ -1,11 +1,14 @@
 spring:
-  application:
-    name: product-service
   data:
     mongodb:
       host: mongo-product
       port: 27017
       database: product_service_db
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
 
 eureka:
   client:

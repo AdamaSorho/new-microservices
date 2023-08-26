@@ -1,38 +1,41 @@
 version: '3'
 services:
-  ## Mysql Docker Compose Config
-  mysql-order:
-    container_name: mysql-order
-    image: mysql:8-debian
+  ## Postgres Docker Compose Config
+  postgres-order:
+    container_name: postgres-order
+    image: postgres
     environment:
-      MYSQL_ROOT_USERNAME: root
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: order_service_db
-      MYSQL_USER: psorho
-      MYSQL_PASSWORD: password
+      POSTGRES_DB: order_service_db
+      POSTGRES_USER: psorho
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
     volumes:
-      - ./mysql-order:/var/lib/mysql
+      - ./postgres-order:/data/postgres
     ports:
-      - "3307:3307"
+      - "5431:5431"
     expose:
-      - "3307"
+      - "5431"
+    command:
+      - -p 5431
     restart: unless-stopped
 
-  mysql-inventory:
-    container_name: mysql-inventory
-    image: mysql:8-debian
+  postgres-inventory:
+    container_name: postgres-inventory
+    image: postgres
     environment:
-      MYSQL_ROOT_USERNAME: root
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: inventory_service_db
-      MYSQL_USER: psorho
-      MYSQL_PASSWORD: password
+      POSTGRES_DB: inventory_service_db
+      POSTGRES_USER: psorho
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
     volumes:
-      - ./mysql-inventory:/var/lib/mysql
+      - ./postgres-inventory:/data/postgres
+      - ./inventory-service/src/main/resources/data.sql:/docker-entrypoint-initdb.d/data.sql
     ports:
-      - "3308:3308"
+      - "5433:5433"
     expose:
-      - "3308"
+      - "5433"
+    command:
+      - -p 5433
     restart: unless-stopped
 
 
@@ -68,7 +71,7 @@ services:
       - "--import-realm"
     environment:
       DB_VENDOR: MYSQL
-      DB_ADDR: mysql
+      DB_ADDR: keycloak-mysql
       DB_DATABASE: keycloak
       DB_PASSWORD: password
       DB_USER: keycloak
@@ -136,6 +139,8 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=TRACE
+      - eureka.client.service-url.defaultZone=http://eureka:password@discovery-server:8761/eureka
+      - spring.security.oauth2.resource-server.jwt.issuer-uri=http://keycloak:8080/realms/spring-boot-microservices-realm
     depends_on:
       - zipkin
       - discovery-server
@@ -148,6 +153,7 @@ services:
     pull_policy: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - eureka.client.service-url.defaultZone=http://discovery-server:8761/eureka
     depends_on:
       - mongo-product
       - discovery-server
@@ -160,9 +166,10 @@ services:
     pull_policy: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-order:3307/order_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5431/order_service_db
+      - eureka.client.service-url.defaultZone=http://discovery-server:8761/eureka
     depends_on:
-      - mysql-order
+      - postgres-order
       - broker
       - zipkin
       - discovery-server
@@ -176,9 +183,10 @@ services:
     pull_policy: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-inventory:3308/inventory_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-inventory:5433/inventory_service_db
+      - eureka.client.service-url.defaultZone=http://discovery-server:8761/eureka
     depends_on:
-      - mysql-inventory
+      - postgres-inventory
       - discovery-server
       - api-gateway
       - zipkin
@@ -190,6 +198,7 @@ services:
     pull_policy: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - eureka.client.service-url.defaultZone=http://discovery-server:8761/eureka
     depends_on:
       - zipkin
       - broker
