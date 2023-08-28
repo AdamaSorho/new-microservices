@@ -24,6 +24,11 @@ management:
   tracing:
     sampling:
       probability: 1.0
+  ## Prometheus endpoint
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
 eureka:
   client:
     service-url:

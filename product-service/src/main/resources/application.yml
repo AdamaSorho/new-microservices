@@ -8,15 +8,15 @@ spring:
       database: product-service-db
 
   ## for distributed tracing
-#  zipkin:
-#    base-url: http://localhost:9411
-#    sleuth:
-#      sampler:
-#        probability: 1.0
 management:
   tracing:
     sampling:
       probability: 1.0
+  ## Prometheus endpoint
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
 eureka:
   client:
     service-url:
